@@ -10,6 +10,8 @@ const dishRouter = express.Router();
 // ---> Using middleware bodyParser to parse the JSON Body that can be accessed by using req.body
 dishRouter.use(bodyParser.json());
 
+//------------- CRUD FOR ALL COMMENTS ON A SPECIFIC DISH ----------------
+
 dishRouter.route('/:dishId/comments')
 .get((req,res,next) => {
     Dishes.findById(req.params.dishId)
@@ -74,6 +76,8 @@ dishRouter.route('/:dishId/comments')
     }, (err) => next(err))
     .catch((err) => next(err));    
 });
+
+//------------- CRUD FOR SPECIFIC COMMENT ON A SPECIFIC DISH ----------------
 
 dishRouter.route('/:dishId/comments/:commentId')
 .get((req,res,next) => {
