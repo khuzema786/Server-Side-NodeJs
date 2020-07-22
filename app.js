@@ -48,8 +48,8 @@ app.use(session({
 function auth (req, res, next) {
   
   console.log(req.signedCookies);
-  // Checks if the cookie has a user attatched to it, If not then it asks for authentication
-  if (!req.signedCookies.user) {
+  // Checks if the session has a user attatched to it, If not then it asks for authentication
+  if (!req.session.user) {
     var authHeader = req.headers.authorization;
     if (!authHeader) {
         var err = new Error('You are not authenticated!');
@@ -62,7 +62,7 @@ function auth (req, res, next) {
     var user = auth[0];
     var pass = auth[1];
     if (user == 'admin' && pass == 'password') {
-        res.cookie('user','admin',{signed: true}); // Attatches a value of admin to the user
+      req.session.user = 'admin'; // Attatches a value of admin to the user
         next(); // authorized
     } else {
         var err = new Error('You are not authenticated!');
@@ -71,9 +71,10 @@ function auth (req, res, next) {
         next(err);
     }
   }
-  // Else if the user is already attatched to cookie then goes onto next middleware
+  // Else if the user is already attatched to session then goes onto next middleware
   else {
-      if (req.signedCookies.user === 'admin') {
+      if (req.session.user === 'admin') {
+          console.log('req.session: ',req.session);
           next();
       }
       else {
