@@ -7,6 +7,9 @@ var logger = require('morgan');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session); // Note: session-file-store takes "session" as parameter
 
+var passport = require('passport'); // Passport Authentication
+var authenticate = require('./authenticate');
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var dishRouter = require('./routes/dishRouter');
@@ -44,31 +47,27 @@ app.use(session({
   store: new FileStore()
 }));
 
-// ---> USE POSTMAN  TO TEST ALL THE ROUTES
+// ---> Using Passport Authentication and sessions
+app.use(passport.initialize());
+app.use(passport.session());
+
+// ---> USE POSTMAN TO TEST ALL THE ROUTES
 
 // ---> Incoming user can access index and user endpoint without authentication, but not others
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-// ---> Basic User Authentication Middleware with Cookie attatchment-- Will be taking place only after user routing and logging in
+// ---> After passport user authentication process this auth middleware is executed
 function auth (req, res, next) {
+  console.log(req.user);
 
-  console.log(req.session);
-  // Checks if the session has a user attatched to it
-  if(!req.session.user) {
-      var err = new Error('You are not authenticated!');
-      err.status = 403;
-      return next(err);
+  if (!req.user) {
+    var err = new Error('You are not authenticated!');
+    err.status = 403;
+    next(err);
   }
   else {
-    if (req.session.user === 'authenticated') {
-      next(); // authorized
-    }
-    else {
-      var err = new Error('You are not authenticated!');
-      err.status = 403;
-      return next(err);
-    }
+        next();
   }
 }
 
