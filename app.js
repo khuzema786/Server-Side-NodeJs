@@ -31,6 +31,18 @@ connect.then((db) => {
 
 var app = express();
 
+// Secure traffic only - Redirecting to https port for secure server
+app.all('*', (req, res, next) => {
+
+  // If incoming request is already secure, go to next middleware
+  if (req.secure) {
+    return next();
+  }
+  else {
+    res.redirect(307, 'https://' + req.hostname + ':' + app.get('secPort') + req.url);
+  }
+});
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -39,42 +51,14 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-//app.use(cookieParser('12345-67890-09876-54321')); // Adding a cookie ID randomly
-
-// ----> Using Express Session
-// app.use(session({
-//   name: 'session-id',
-//   secret: '12345-67890-09876-54321',
-//   saveUninitialized: false,
-//   resave: false,
-//   store: new FileStore()
-// }));
-
-// ---> Using Passport Authentication and sessions
+// ---> Using Passport Authentication with JWT tokens
 app.use(passport.initialize());
-// app.use(passport.session());
 
 // ---> USE POSTMAN TO TEST ALL THE ROUTES
 
 // ---> Incoming user can access index and user endpoint without authentication, but not others
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
-// ---> After passport user authentication process this auth middleware is executed
-// function auth (req, res, next) {
-//   console.log(req.user);
-
-//   if (!req.user) {
-//     var err = new Error('You are not authenticated!');
-//     err.status = 403;
-//     next(err);
-//   }
-//   else {
-//         next();
-//   }
-// }
-
-// app.use(auth);
 
 // ---> Routes middleware to the static and dynamic pages
 app.use(express.static(path.join(__dirname, 'public')));
