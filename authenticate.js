@@ -7,6 +7,7 @@ var User = require('./models/user');
 var JwtStrategy = require('passport-jwt').Strategy;
 var ExtractJwt = require('passport-jwt').ExtractJwt;
 var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
+var FacebookTokenStrategy = require('passport-facebook-token'); // Facebook Oath 2
 
 var config = require('./config.js');
 
@@ -56,3 +57,30 @@ exports.verifyAdmin = (req, res, next) => {
         return next(err);
     }   
 }
+
+exports.facebookPassport = passport.use(new FacebookTokenStrategy({
+    clientID: config.facebook.clientId,
+    clientSecret: config.facebook.clientSecret
+}, (accessToken, refreshToken, profile, done) => {
+    User.findOne({facebookId: profile.id}, (err, user) => { // User.findOne to check if a particular facebook user has logged in previously
+        if (err) {
+            return done(err, false);
+        }
+        if (!err && user !== null) {
+            return done(null, user);
+        }
+        else {
+            user = new User({ username: profile.displayName }); // If user is logging into our app for the first time using fb, we need to create that user details
+            user.facebookId = profile.id;
+            user.firstname = profile.name.givenName;
+            user.lastname = profile.name.familyName;
+            user.save((err, user) => {
+                if (err)
+                    return done(err, false);
+                else
+                    return done(null, user);
+            })
+        }
+    });
+}
+));
